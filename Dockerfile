@@ -1,14 +1,19 @@
-# Usar uma imagem base do Java
-FROM openjdk:17-jdk-slim
-
-# Criar diretório de trabalho
+# Usa a imagem oficial do Maven para construir o projeto
+FROM maven:3.9.0-eclipse-temurin-17 AS build
 WORKDIR /app
 
-# Copiar o arquivo JAR gerado
-COPY target/hr-management-system-0.0.1-SNAPSHOT.jar app.jar
+# Copia os arquivos do projeto para o container
+COPY . .
 
-# Expor a porta da aplicação
-EXPOSE 8080
+# Compila o projeto e gera o JAR
+RUN mvn clean install
 
-# Comando para executar a aplicação
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Usa a imagem oficial do OpenJDK para execução
+FROM openjdk:17-jdk-slim
+WORKDIR /app
+
+# Copia o JAR gerado para a imagem final
+COPY --from=build /app/target/hr-management-system-0.0.1-SNAPSHOT.jar app.jar
+
+# Define o comando de execução da aplicação
+CMD ["java", "-jar", "app.jar"]
